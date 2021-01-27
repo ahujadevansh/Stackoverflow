@@ -1,0 +1,65 @@
+public function voteQuestion(Question $question, int $vote)
+    {
+        //Either I need to update the vote or need to create the vote
+        if(auth()->user()->hasVoteForQuestion($question)) {
+            $question->updateVote($vote);
+        }else {
+            $question->vote($vote);
+        }
+        return redirect()->back();
+    }
+
+
+
+
+
+web.php
+
+
+
+Route::post('questions/{question}/vote/{vote}', 'VotesController@voteQuestion')->name('questions.vote');
+Route::post('answers/{answer}/vote/{vote}', 'VotesController@voteAnswer')->name('answers.vote');
+
+
+
+
+
+
+
+show.blade.php
+
+
+
+
+@can('vote', $question)
+                                        <form action="{{ route('questions.vote', [$question->id, 1]) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn {{ auth()->user()->hasQuestionUpVote($question) ? 'text-dark': 'text-black-50' }}">
+                                                <i class="fa fa-caret-up fa-3x" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <a href="{{ route('login') }}" title="Up Vote" class="vote-up d-block text-center text-black-50">
+                                            <i class="fa fa-caret-up fa-3x" aria-hidden="true"></i>
+                                        </a>
+                                    @endcan
+                                    <h4 class="votes-count text-muted text-center m-0">{{ $question->votes_count }}</h4>
+                                    @can('vote', $question)
+                                        <form action="{{ route('questions.vote', [$question->id, -1]) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn {{ auth()->user()->hasQuestionDownVote($question) ? 'text-dark': 'text-black-50' }}">
+                                                <i class="fa fa-caret-down fa-3x" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <a href="{{ route('login') }}" title="Up Vote" class="vote-up d-block text-center text-black-50">
+                                            <i class="fa fa-caret-up fa-3x" aria-hidden="true"></i>
+                                        </a>
+                                    @endcan
+
+
+policy
+
+public function vote(User $user, Question $question) {
+return $user->id != $question->user_id;
+}
